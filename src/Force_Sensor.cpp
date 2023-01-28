@@ -28,7 +28,7 @@ double Force_Sensor::get_force_value(double slope, double offset){
       reading = Load_Cell.read()*slope + offset;
         if (reading <= 0)
           {
-            reading = reading * (-1);
+            reading = reading * (1);
           }
       return reading;
     }

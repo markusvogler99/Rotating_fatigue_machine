@@ -9,6 +9,7 @@ double temp_ax = 0;
 int temp_rpm_value = 0; 
 int temp_loadcycles = 0;
 int temp_indicator = 0; 
+String temp_status = 0; 
 String temp_state_name; 
 
 elapsedMillis time_display;
@@ -52,8 +53,12 @@ const int TEXT_SIZE_SMALL = 1;
 
    const int POS_LASTZYKLEN_X = 5;
    const int POS_LASTZYKLEN_Y = 45;
+
    const int POS_STATE_X = 5;
    const int POS_STATE_Y = 65;
+
+   const int POS_STATUS_X = 5;
+   const int POS_STATUS_Y = 230;
 
    const int POS_UPDATE_VALUES_X = 140;
 
@@ -150,6 +155,10 @@ tft.fillScreen(ILI9341_BLACK);
 
   tft.setCursor(POS_STATE_X, POS_STATE_Y);
   tft.print("State: ");
+  
+  tft.setTextSize(1);
+  tft.setCursor(POS_STATUS_X, POS_STATUS_Y);
+  tft.print("Status: ");
   /*
   tft.drawCircle(DIAL_CENTER_X, DIAL_CENTER_Y, DIAL_RADIUS, ILI9341_WHITE);
   drawTickMarks();
@@ -174,7 +183,7 @@ tft.fillScreen(ILI9341_BLACK);
   
 }
 
-void Display_MCI::draw_display(double reading_bend, double reading_ax, int rpm_value, int loadcycles,String state_name)
+void Display_MCI::draw_display(double reading_bend, double reading_ax, int rpm_value, int loadcycles,String state_name, String status)
  
 {
 
@@ -199,6 +208,11 @@ if (time_display > 1000)
    tft.setCursor(POS_UPDATE_VALUES_X, POS_STATE_Y);
    tft.print(temp_state_name);
 
+    tft.setTextSize(1);
+    tft.setCursor(50, POS_STATUS_Y);
+    tft.print(temp_status);
+    tft.setTextSize(2);
+
    tft.setTextColor(ILI9341_WHITE);
    tft.setCursor(POS_UPDATE_VALUES_X, POS_BIEGEKRAFT_Y);
    tft.printf("%3.2f N",reading_bend);
@@ -214,13 +228,26 @@ if (time_display > 1000)
 
     tft.setCursor(POS_UPDATE_VALUES_X, POS_STATE_Y);
     tft.print(state_name);
+  tft.setTextSize(1);
+
+if (status=="Card failed"){
+  tft.setTextColor(ILI9341_RED);
+}
+else 
+{
+  tft.setTextColor(ILI9341_GREEN);
+}
+    tft.setCursor(50, POS_STATUS_Y);
+    tft.print(status);
+    tft.setTextSize(2);
 
    temp_bend =reading_bend;
    temp_ax = reading_ax;
    temp_rpm_value = rpm_value;
    temp_loadcycles = loadcycles; 
    time_display = 0;
-   temp_state_name = state_name; 
+   temp_state_name = state_name;
+   temp_status = status; 
   
  }
 
