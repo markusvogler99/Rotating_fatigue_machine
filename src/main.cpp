@@ -125,20 +125,21 @@ switch (state)
 
       
          // Serial.printf("Initializing SD card...");
-
+/*
         if(!SD.begin(chipSelect))
         {
             Serial.println("Card failed");
-            status = "Card failed";
+            //status = "Card failed";
 
         }
+      
         if (SD.begin(chipSelect))
         {
             Serial.println("Card initialized.");
-            status = "Card initialized";
+            //status = "Card initialized";
         }       
-      // don't do anything more:  
-  
+     
+  */
 
 
 //Create File Name
