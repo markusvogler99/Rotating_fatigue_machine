@@ -33,10 +33,6 @@ double Force_Sensor::get_force_value(double slope, double offset){
       return reading;
     }
 
-  else 
-    {
-      return -5;
-    }
   
 
 

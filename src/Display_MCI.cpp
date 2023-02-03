@@ -46,16 +46,16 @@ const int TEXT_SIZE_SMALL = 1;
   const int DIAL_LABEL_X_OFFSET = 4;
 
    const int POS_BIEGEKRAFT_X= 5;
-   const int POS_BIEGEKRAFT_Y= 5;
+   const int POS_BIEGEKRAFT_Y= 55;
 
    const int POS_AXIALKRAFT_X= 5;
-   const int POS_AXIALKRAFT_Y= 25;
+   const int POS_AXIALKRAFT_Y= 75;
 
    const int POS_LASTZYKLEN_X = 5;
-   const int POS_LASTZYKLEN_Y = 45;
+   const int POS_LASTZYKLEN_Y = 35;
 
    const int POS_STATE_X = 5;
-   const int POS_STATE_Y = 65;
+   const int POS_STATE_Y = 5;
 
    const int POS_STATUS_X = 5;
    const int POS_STATUS_Y = 230;

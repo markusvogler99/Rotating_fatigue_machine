@@ -49,8 +49,8 @@ const double offset_bend = 1.05;
 //Force_Sensor axial
 Force_Sensor axial_sensor;
 double reading_ax = 0;
-const double slope_ax =  -0.0050729537; 
-const double offset_ax = - 26496.3043898747;
+const double slope_ax =  -0.0050729537; //Linear ermittelter Wert mit 0.9994 Linearität 
+const double offset_ax = - 26496.3043898747; //Offset ermittelt
 
 //Speed_Sensor
 Speed_Sensor speed_sensor;
@@ -62,7 +62,7 @@ bool button= false;
 //bool motor_stop= false;
 int flag = 0;
 int file_flag = 0;
-int flag_SD = 0; 
+int flag_load_cycles = 0; 
 
 //State Machine
 int test = 0; 
@@ -77,14 +77,14 @@ const char * Version_count;
 int  file_name_2; 
 const char *  file_name_3; 
 int old_loadcycles = 0; 
-int file_counter = 0; 
+int file_counter = 1; 
 
 int test_variable = 0; 
 
 //------------------------------------Define Classes-------------------------------------
 Display_MCI Display;
 elapsedMillis time_force_sensors;
-elapsedMillis time_test_2;
+elapsedMillis time_SD_CARD;
 TouchScreen ts = TouchScreen(YP, XP, YM, XM, 300);
 String Versuch_init  = "Versuch ";
 String Versuch;
@@ -120,26 +120,30 @@ switch (state)
 {
     case 0:
         state_name = "0 - IDLE";
-        load_cycles = 0;
+        speed_sensor.reset_load_cycles();
         flag = 0; 
 
       
-         // Serial.printf("Initializing SD card...");
-/*
-        if(!SD.begin(chipSelect))
-        {
-            Serial.println("Card failed");
-            //status = "Card failed";
+          //Serial.printf("Initializing SD card...");
 
-        }
+        
       
         if (SD.begin(chipSelect))
         {
             Serial.println("Card initialized.");
-            //status = "Card initialized";
-        }       
-     
-  */
+            status = "Card initialized";
+            //test_variable = 1;
+        }
+        else
+        {
+          status = "Card failed";
+        }
+
+        flag_load_cycles = 1; 
+               
+        
+  
+  
 
 
 //Create File Name
@@ -155,8 +159,8 @@ switch (state)
         if (digitalRead(MOTOR_EIN) == HIGH)
           {
           state = 1; 
-          test_variable = 0;
-          myfile.printf("Lastzyklen, Biegekraft, Axialkraft");
+          //load_cycles = 0; 
+          myfile.printf("Lastzyklen, Biegekraft, Axialkraft \n");
           }
     break; 
 
@@ -164,22 +168,13 @@ switch (state)
 //------------------------------------RUNNING-------------------------------------
     case 1:
         state_name = "1 - RUNNING";
-  
-        if (test_variable == 0) 
-        {
-        myfile.printf("TEST");
-        test_variable = 1;
-        }
-  
+       
+         load_cycles = speed_sensor.get_load_cycles();
         if(load_cycles != old_loadcycles)
         {
           myfile.printf("%d",load_cycles); 
           myfile.printf(", %f",reading_bend);
-          myfile.printf(", %f \n",reading_ax);
-          Serial.printf("%d",load_cycles); 
-          Serial.printf(", %f",reading_bend);
-          Serial.printf(", %f \n",reading_ax);
-  
+          myfile.printf(", %f \n",reading_ax);  
           old_loadcycles = load_cycles; 
         }
 
@@ -202,11 +197,20 @@ switch (state)
 //------------------------------------COMPLETE-------------------------------------
     case 2:
         state_name = "2 - COMPLETE";
+        load_cycles = speed_sensor.get_load_cycles();
+        if(load_cycles != old_loadcycles)
+        {
+          myfile.printf("%d",load_cycles); 
+          myfile.printf(", %f",reading_bend);
+          myfile.printf(", %f \n",reading_ax);  
+          old_loadcycles = load_cycles; 
+        }
         digitalWrite(MOTOR_AUS,HIGH);
   //--------------Transition------------------------
         if (button == true)
         {
           state = 0;
+          //load_cycles = 0; 
           Versuch = "Versuch ";
           myfile.close();
           file_counter = file_counter + 1; 
@@ -217,6 +221,14 @@ switch (state)
 //------------------------------------HOLDING------------------------------------
     case 3:
         state_name = "3 - HOLDING";
+        load_cycles = speed_sensor.get_load_cycles();
+        if(load_cycles != old_loadcycles)
+        {
+          myfile.printf("%d",load_cycles); 
+          myfile.printf(", %f",reading_bend);
+          myfile.printf(", %f \n",reading_ax);  
+          old_loadcycles = load_cycles; 
+        }
     //--------------Transition------------------------
         if (digitalRead(MOTOR_EIN) == HIGH)
         {
@@ -225,6 +237,7 @@ switch (state)
         }
         else if (button == true) {
           state = 0;
+          //load_cycles = 0; 
           Versuch = "Versuch ";
           button = false; 
           myfile.close();
@@ -237,14 +250,14 @@ switch (state)
 //------------------------------------Reading Force Values Consistently-------------------------------------
   if (time_force_sensors>100){
   reading_bend = bending_sensor.get_force_value(slope_bend, offset_bend);
-  reading_ax = axial_sensor.get_force_value(slope_ax, offset_ax);
+  reading_ax = 0; //axial_sensor.get_force_value(slope_ax, offset_ax);
   time_force_sensors = 0; 
   }
 
 
 //------------------------------------Count Load cycles-------------------------------------
 
-  load_cycles = speed_sensor.get_load_cycles(); 
+  //load_cycles = speed_sensor.get_load_cycles(); 
   //rpm_value = speed_sensor.get_rpm_value();
  
 //------------------------------------Check Touch Screen Input-------------------------------------
@@ -259,7 +272,7 @@ switch (state)
      button = false;
     }
 
-  if (load_cycles != old_loadcycles){
+  /*if (load_cycles != old_loadcycles){
 
   myfile.printf("%d",load_cycles); 
   myfile.printf(", %f",reading_bend);
@@ -270,6 +283,7 @@ switch (state)
   
   old_loadcycles = load_cycles; 
   }
+  */
 //------------------------------------Refresh Display -------------------------------------
 
  Display.draw_display(reading_bend, reading_ax,rpm_value,load_cycles,state_name,status);

@@ -40,6 +40,10 @@ void Speed_Sensor::attach_interrupt(byte DIN) {
   attachInterrupt(DIN, pin_ISR, RISING);
 }
 
+void Speed_Sensor::reset_load_cycles() {
+  RPM_Count = 0;
+}
+
 
  unsigned long  Speed_Sensor::get_rpm_value()
 {

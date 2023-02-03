@@ -17,6 +17,8 @@ public:
 
     void attach_interrupt(byte DIN);
 
+     void reset_load_cycles();
+
     unsigned long get_rpm_value();
 
     int get_load_cycles();
