@@ -44,6 +44,7 @@ const int MOTOR_EIN = 8;
 //Force_Sensor bending
 Force_Sensor bending_sensor;
 double reading_bend = 0;
+double reading_bend_ave = 0; 
 const double slope_bend = 0.000111688; 
 const double offset_bend = 1.05;
 
@@ -80,12 +81,13 @@ const char *  file_name_3;
 int old_loadcycles = 0; 
 int file_counter = 1; 
 
-int test_variable = 0; 
+int counter = 0; 
 
 //------------------------------------Define Classes-------------------------------------
 Display_MCI Display;
 elapsedMillis time_force_sensors;
 elapsedMillis time_SD_CARD;
+elapsedMillis time_average;
 TouchScreen ts = TouchScreen(YP, XP, YM, XM, 300);
 String Versuch_init  = "Versuch ";
 String Versuch;
@@ -96,7 +98,6 @@ const char* Versuch_count;
 
 void count_write_load_cycles()
 {
-
  load_cycles = speed_sensor.get_load_cycles();
  
         if(load_cycles != old_loadcycles)
@@ -107,7 +108,6 @@ void count_write_load_cycles()
           
           old_loadcycles = load_cycles; 
         }
-
 }
 
 void reset_file_name()
@@ -192,11 +192,11 @@ switch (state)
         
 
 //--------------Transition------------------------
-        if (reading_bend < 0.5*start_load)
-        {
-          state = 2; 
-        }
-        else if (digitalRead(MOTOR_EIN) == LOW)
+        //if (reading_bend < 0.5*start_load)
+       // {
+        //  state = 2; 
+       // }
+         if (digitalRead(MOTOR_EIN) == LOW)
         {
           state = 3; 
         }
@@ -226,7 +226,6 @@ switch (state)
         if (digitalRead(MOTOR_EIN) == HIGH)
         {
           state = 1; 
-          test_variable = 0; 
         }
         else if (button == true) {
           state = 0;
@@ -238,13 +237,33 @@ switch (state)
 }
 
 //------------------------------------Reading Force Values Consistently-------------------------------------
-  if (time_force_sensors>100){
-    
+  if (time_force_sensors>100)  
+  {
   reading_bend = bending_sensor.get_force_value(slope_bend, offset_bend);
+  reading_bend_ave = reading_bend_ave + reading_bend;
+  Serial.printf("Load cycles: %f \n  ",load_cycles);
+  counter = counter +1;
+  if (counter > 10)
+  {
+reading_bend_ave = (reading_bend_ave/10);
+//Serial.printf("Average over 10: %f \n  ",reading_bend_ave);
+reading_bend_ave = 0; 
+
+counter = 0; 
+  }
   reading_ax = axial_sensor.get_force_value(slope_ax, offset_ax);
-  Serial.printf("%f \n",reading_ax);
+  
+  
   time_force_sensors = 0; 
   }
+
+ // if (time_average > 1000)
+  //{
+   // Serial.printf("Threshold: %f ",start_load/2); 
+  //time_average = 0; 
+  //}
+
+  
 
 
 //------------------------------------Count Load cycles-------------------------------------
