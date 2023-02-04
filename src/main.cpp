@@ -45,8 +45,8 @@ const int MOTOR_EIN = 8;
 Force_Sensor bending_sensor;
 double reading_bend = 0;
 double reading_bend_ave = 0; 
-const double slope_bend = 0.000111688; 
-const double offset_bend = 1.05;
+const double slope_bend = 1;//0.000111688; 
+const double offset_bend = 0;//1.05;
 
 //Force_Sensor axial
 Force_Sensor axial_sensor;
@@ -125,9 +125,7 @@ void setup() {
    pinMode(SPEED_SENSOR, INPUT_PULLDOWN); 
    pinMode(MOTOR_AUS, OUTPUT);
   
-   //pinMode(TEST, OUTPUT);
-   // delay(1000);
-    //digitalWrite(TEST,HIGH);
+   
     pinMode(MOTOR_EIN, INPUT);
    
 
@@ -147,9 +145,11 @@ void loop(void) {
 switch (state)
 {
     case 0:
+       // count_write_load_cycles();
         state_name = "0 - IDLE";
-        speed_sensor.reset_load_cycles();
-        load_cycles = 0; 
+        //Serial.println("hallo");
+       // speed_sensor.reset_load_cycles();
+        //load_cycles = 0; 
       
         if (SD.begin(chipSelect))
         {
@@ -161,7 +161,7 @@ switch (state)
           status = "Card failed";
         }
 
-        flag_load_cycles = 1; 
+        //flag_load_cycles = 1; 
                
 //Create File Name
 
@@ -192,10 +192,10 @@ switch (state)
         
 
 //--------------Transition------------------------
-        //if (reading_bend < 0.5*start_load)
-       // {
-        //  state = 2; 
-       // }
+        if (reading_bend < 0.5*start_load)
+        {
+          state = 2; 
+       }
          if (digitalRead(MOTOR_EIN) == LOW)
         {
           state = 3; 
@@ -241,7 +241,7 @@ switch (state)
   {
   reading_bend = bending_sensor.get_force_value(slope_bend, offset_bend);
   reading_bend_ave = reading_bend_ave + reading_bend;
-  Serial.printf("Load cycles: %f \n  ",load_cycles);
+  //Serial.printf("Load cycles: %f \n  ",load_cycles);
   counter = counter +1;
   if (counter > 10)
   {
@@ -268,7 +268,7 @@ counter = 0;
 
 //------------------------------------Count Load cycles-------------------------------------
 
-  //load_cycles = speed_sensor.get_load_cycles(); 
+  load_cycles = speed_sensor.get_load_cycles(); 
   //rpm_value = speed_sensor.get_rpm_value();
  
 //------------------------------------Check Touch Screen Input-------------------------------------
@@ -287,7 +287,7 @@ counter = 0;
 //------------------------------------Refresh Display -------------------------------------
 
  Display.draw_display(reading_bend, reading_ax,rpm_value,load_cycles,state_name,status);
-
+  // Serial.printf("Load cycles: %d \n  ",rpm_value);
 }
 
 

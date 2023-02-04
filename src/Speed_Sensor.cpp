@@ -29,15 +29,21 @@
 
 void pin_ISR() {
    //tacho.tick();
-   RPM_Count++;
-   end = timer; 
-   duration = end - start; 
-   start = end;
-   timer = 0; 
+   //RPM_Count++;
+
+  
+      RPM_Count++;
+
+   
+  
+   //end = timer; 
+   //duration = end - start; 
+   //start = end;
+   //timer = 0; 
 }
 
 void Speed_Sensor::attach_interrupt(byte DIN) {
-  attachInterrupt(DIN, pin_ISR, RISING);
+  attachInterrupt(DIN, pin_ISR,RISING);
 }
 
 void Speed_Sensor::reset_load_cycles() {
