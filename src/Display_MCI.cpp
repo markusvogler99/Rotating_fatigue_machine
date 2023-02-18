@@ -2,13 +2,17 @@
 
 
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC );
 
 double temp_bend =0;
 double temp_ax = 0;
 int temp_rpm_value = 0; 
 int temp_loadcycles = 0;
-int temp_indicator = 0; 
+int temp_indicator = 0;
+double temp_temp_mot = 0; 
+double temp_temp_ax = 0;  
+double temp_sigma_zd = 0; 
+double temp_sigma_mittel = 0;  
 String temp_status = 0; 
 String temp_state_name; 
 
@@ -48,8 +52,21 @@ const int TEXT_SIZE_SMALL = 1;
    const int POS_BIEGEKRAFT_X= 5;
    const int POS_BIEGEKRAFT_Y= 55;
 
+   
+
    const int POS_AXIALKRAFT_X= 5;
    const int POS_AXIALKRAFT_Y= 75;
+
+     const int POS_SIGMA_ZD_X= 5;
+   const int POS_SIGMA_ZD_Y = 95;
+
+   const int POS_SIGMA_MITTEL_X= 5;
+   const int POS_SIGMA_MITTEL_Y = 115;
+
+    const int POS_TEMP_MOT_X= 5;
+   const int POS_TEMP_Y = 135;
+   //const int POS_TEMP2_Y = 135;
+
 
    const int POS_LASTZYKLEN_X = 5;
    const int POS_LASTZYKLEN_Y = 35;
@@ -147,11 +164,22 @@ tft.fillScreen(ILI9341_BLACK);
   tft.setCursor(POS_AXIALKRAFT_X,POS_AXIALKRAFT_Y);
   tft.print("Axialkraft: ");
 
+  tft.setCursor(POS_SIGMA_ZD_X,POS_SIGMA_ZD_Y);
+ //tft.print(putchar(03c3));
+  //tft.print((char)11100110);
+  tft.print("Sigma_w: ");
+
+  tft.setCursor(POS_SIGMA_MITTEL_X,POS_SIGMA_MITTEL_Y);
+  tft.print("Sigma_mit: ");
+
   //tft.setCursor(5, 45);
  // tft.print("Drehzahl: ");
   
   tft.setCursor(POS_LASTZYKLEN_X, POS_LASTZYKLEN_Y);
   tft.print("Lastzyklen: ");
+
+   tft.setCursor(POS_TEMP_MOT_X, POS_TEMP_Y);
+  tft.print("Temperatur: ");
 
   tft.setCursor(POS_STATE_X, POS_STATE_Y);
   tft.print("State: ");
@@ -183,7 +211,7 @@ tft.fillScreen(ILI9341_BLACK);
   
 }
 
-void Display_MCI::draw_display(double reading_bend, double reading_ax, int rpm_value, int loadcycles,String state_name, String status)
+void Display_MCI::draw_display(double reading_bend, double reading_ax, int loadcycles,String state_name, String status,double Temp_Motor,double Temp_Axial,double sigma_zd, double sigma_mittel)
  
 {
 
@@ -199,6 +227,12 @@ if (time_display > 1000)
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
    tft.printf("%3.2f N",temp_ax);
 
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_ZD_Y);
+   tft.printf("%3.2f MPa",temp_sigma_zd);
+
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
+   tft.printf("%3.2f MPa",temp_sigma_mittel);
+
    tft.setCursor(POS_UPDATE_VALUES_X, 45);
    tft.printf("%d rpm", temp_rpm_value);
 
@@ -207,6 +241,18 @@ if (time_display > 1000)
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_STATE_Y);
    tft.print(temp_state_name);
+
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y);
+   tft.printf("%3.2f ",temp_temp_mot);
+   tft.print((char)247);
+   tft.print("C (li.)");
+
+  
+
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y+20);
+   tft.printf("%3.2f ",temp_temp_ax);
+   tft.print((char)247);
+   tft.print("C (re.)");
 
     tft.setTextSize(1);
     tft.setCursor(50, POS_STATUS_Y);
@@ -217,14 +263,43 @@ if (time_display > 1000)
    tft.setCursor(POS_UPDATE_VALUES_X, POS_BIEGEKRAFT_Y);
    tft.printf("%3.2f N",reading_bend);
   
+  if (reading_ax <= 150)
+  {
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
+   tft.printf("-.-- N");
+  }
+else 
+{
+  tft.setTextColor(ILI9341_BLACK);
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
+   tft.printf("-.-- N");
+  tft.setTextColor(ILI9341_WHITE);
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
    tft.printf("%3.2f N",reading_ax);
+}
 
+ 
+
+tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_ZD_Y);
+   tft.printf("%3.2f MPa",sigma_zd);
+
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
+   tft.printf("%3.2f MPa",sigma_mittel);
   // tft.setCursor(POS_UPDATE_VALUES_X, 45);
    //tft.printf("%d rpm",rpm_value);
 
   tft.setCursor(POS_UPDATE_VALUES_X, POS_LASTZYKLEN_Y);
    tft.print(loadcycles);
+
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y);
+   tft.printf("%3.2f ",Temp_Motor);
+   tft.print((char)247);
+   tft.print("C (li.)");
+
+      tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y+20);
+   tft.printf("%3.2f ",Temp_Axial);
+   tft.print((char)247);
+   tft.print("C (re.)");
 
     tft.setCursor(POS_UPDATE_VALUES_X, POS_STATE_Y);
     tft.print(state_name);
@@ -243,15 +318,21 @@ else
 
    temp_bend =reading_bend;
    temp_ax = reading_ax;
-   temp_rpm_value = rpm_value;
+   temp_sigma_zd = sigma_zd; 
+   temp_sigma_mittel = sigma_mittel; 
+  // temp_rpm_value = rpm_value;
    temp_loadcycles = loadcycles; 
    time_display = 0;
    temp_state_name = state_name;
-   temp_status = status; 
+   temp_status = status;
+   temp_temp_mot = Temp_Motor;
+   temp_temp_ax = Temp_Axial; 
   
  }
 
 }
+
+
  
      
 void Display_MCI::draw_tacho(int rpm)

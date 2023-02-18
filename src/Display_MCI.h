@@ -23,7 +23,7 @@ public:
     //virtual ~Speed_Sensor();
 
     void init_display();
-    void draw_display(double reading_bend, double reading_ax,int rpm,int test,String state,String status);
+    void draw_display(double reading_bend, double reading_ax,int test,String state,String status,double Temp_Motor, double Temp_Axial,double sigma_zd, double sigma_mittel);
     void draw_tacho(int rpm); 
 
 };

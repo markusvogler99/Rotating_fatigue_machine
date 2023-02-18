@@ -28,18 +28,9 @@
  
 
 void pin_ISR() {
-   //tacho.tick();
-   //RPM_Count++;
-
-  
+ 
       RPM_Count++;
-
-   
-  
-   //end = timer; 
-   //duration = end - start; 
-   //start = end;
-   //timer = 0; 
+ 
 }
 
 void Speed_Sensor::attach_interrupt(byte DIN) {

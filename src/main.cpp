@@ -9,6 +9,11 @@
 #include "elapsedMillis.h"
 #include "Tachometer.h"
 #include "TouchScreen.h"
+#include <Adafruit_MAX31865.h>
+
+// Use software SPI: CS, DI, DO, CLK
+Adafruit_MAX31865 Thermo_Motor = Adafruit_MAX31865(17, 18, 19, 20); 
+Adafruit_MAX31865 Thermo_Axial = Adafruit_MAX31865(34, 35, 36, 37);
 
 File myfile; 
 const int chipSelect = BUILTIN_SDCARD;
@@ -22,12 +27,15 @@ const int chipSelect = BUILTIN_SDCARD;
 #define YM 26   // can be a digital pin
 #define XP 25   // can be a digital pin
 
+#define RREF      430.0
+#define RNOMINAL  100.0
+
 //Pins definieren für die Hx711, an denen die Kraftsensoren hängen 
 const int BEND_DOUT_PIN = 2;
 const int BEND_SCK_PIN = 3;
 
 const int AX_DOUT_PIN = 6;
-const int AX_SCK_PIN = 20;
+const int AX_SCK_PIN = 31;
 
 const int GAIN = 128; 
 
@@ -40,24 +48,39 @@ const int MOTOR_AUS = 14;
 //const int TEST = 14;
 const int MOTOR_EIN = 8;
 
+// Temperaturgrenze 
+
+double Temp_thresh = 70; 
+
 
 //Force_Sensor bending
 Force_Sensor bending_sensor;
 double reading_bend = 0;
 double reading_bend_ave = 0; 
-const double slope_bend = 1;//0.000111688; 
-const double offset_bend = 0;//1.05;
+const double slope_bend = 0.0001110613; //0.000111688; 
+const double offset_bend = 1.3300184442;//1.05;
 
 //Force_Sensor axial
 Force_Sensor axial_sensor;
 double reading_ax = 0;
-const double slope_ax =   -0.0054034732; //-0.0052470496 ;           //-0.0050729537; //Linear ermittelter Wert mit 0.9994 Linearität 
-const double offset_ax =  2625.2; //2625.4388645074;      //2610.8711302451;           //- 26496.3043898747; //Offset ermittelt
+const double slope_ax =  -0.0052338633   ;//1; //-0.0052470496 ;           //-0.0050729537; //Linear ermittelter Wert mit 0.9994 Linearität 
+const double offset_ax =  2682.8411330541;//508616.1325909440; //2625.4388645074;      //2610.8711302451;           //- 26496.3043898747; //Offset ermittelt
 
 //Speed_Sensor
 Speed_Sensor speed_sensor;
 double rpm_value = 0;
 int load_cycles = 0;
+
+//Calculate Stresses
+double l1 = 110; //mm
+double d = 6; //mm 
+double pi = 3.141592; 
+double Wb = (pi*(d*d*d))/32; //mm^3
+double A = (d*d)*pi/4; //mm^2
+double sigma_zd = 0; 
+double sigma_mittel = 0; 
+
+
 
 //Touch
 bool button= false;
@@ -80,6 +103,8 @@ int  file_name_2;
 const char *  file_name_3; 
 int old_loadcycles = 0; 
 int file_counter = 1; 
+double complete = 0; 
+int load_cycles_file = 0; 
 
 int counter = 0; 
 
@@ -88,10 +113,15 @@ Display_MCI Display;
 elapsedMillis time_force_sensors;
 elapsedMillis time_SD_CARD;
 elapsedMillis time_average;
+elapsedMillis time_temp;
+elapsedMillis time_write_data; 
+elapsedMillis reset_display; 
 TouchScreen ts = TouchScreen(YP, XP, YM, XM, 300);
 String Versuch_init  = "Versuch ";
 String Versuch;
 String txt = ".txt";
+double Temp_Motor; 
+double Temp_Axial; 
 TSPoint p;
 String file_counter_str;
 const char* Versuch_count;
@@ -100,14 +130,16 @@ void count_write_load_cycles()
 {
  load_cycles = speed_sensor.get_load_cycles();
  
-        if(load_cycles != old_loadcycles)
+        if(time_write_data >= 1000)
         {
+          //load_cycles_file = load_cycles_file +1;
           myfile.printf("%d",load_cycles); 
           myfile.printf(", %f",reading_bend);
           myfile.printf(", %f \n",reading_ax);
-          
-          old_loadcycles = load_cycles; 
-        }
+          old_loadcycles = load_cycles;   
+          time_write_data = 0; 
+        }    
+        
 }
 
 void reset_file_name()
@@ -119,11 +151,14 @@ void reset_file_name()
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
 
    pinMode(SPEED_SENSOR, INPUT_PULLDOWN); 
    pinMode(MOTOR_AUS, OUTPUT);
+
+   Thermo_Axial.begin(MAX31865_4WIRE);
+   Thermo_Motor.begin(MAX31865_4WIRE);
   
    
     pinMode(MOTOR_EIN, INPUT);
@@ -139,6 +174,37 @@ void setup() {
 
 void loop(void) {
 
+//uint16_t Temp_Axial = Thermo_Axial.readRTD();
+//Temp_Motor = Thermo_Motor.readRTD();
+
+//float ratio = Temp_Motor;
+ // ratio /= 32768;
+  //Serial.print("Ratio = "); Serial.println(ratio,8);
+  
+ 
+
+ if (time_temp>5000)  
+  {
+ Temp_Motor = Thermo_Motor.temperature(RNOMINAL, RREF);
+ Temp_Axial = Thermo_Axial.temperature(RNOMINAL, RREF);
+ time_temp = 0; 
+  }
+
+  if (reset_display > 20000)
+  {
+    digitalWrite(9,LOW);
+    digitalWrite(10,LOW);
+    digitalWrite(11,LOW);
+    digitalWrite(12,LOW);
+    delay(10);
+
+    Display.init_display(); 
+    reset_display = 0; 
+  }
+
+
+//Serial.printf("%f \n",Temp_Axial);
+//Serial.printf("%f \n",Temp_Motor); 
 
 
 //----------------------------------------------------------STATE MACHINE---------------
@@ -192,20 +258,20 @@ switch (state)
         
 
 //--------------Transition------------------------
-        if (reading_bend < 0.5*start_load)
+       if ((complete < 0.5*start_load)  || (Temp_Motor >= Temp_thresh) || (Temp_Axial >= Temp_thresh))
         {
           state = 2; 
        }
-         if (digitalRead(MOTOR_EIN) == LOW)
+         if ((digitalRead(MOTOR_EIN) == LOW))
         {
           state = 3; 
-        }
+       }
   
     break; 
 //------------------------------------COMPLETE-------------------------------------
     case 2:
         state_name = "2 - COMPLETE";
-        count_write_load_cycles();
+        //count_write_load_cycles();
         status = "SAVE & RESET";
 
         digitalWrite(MOTOR_AUS,HIGH);
@@ -216,12 +282,13 @@ switch (state)
           reset_file_name();
           speed_sensor.reset_load_cycles();
           digitalWrite(MOTOR_AUS,LOW);
+          load_cycles_file = 0; 
         }    
     break; 
 //------------------------------------HOLDING------------------------------------
     case 3:
         state_name = "3 - HOLDING";
-        count_write_load_cycles();
+        //count_write_load_cycles();
         status = "Restart or SAVE";
         if (digitalRead(MOTOR_EIN) == HIGH)
         {
@@ -232,26 +299,32 @@ switch (state)
           speed_sensor.reset_load_cycles();
           reset_file_name();
           button = false; 
+          load_cycles_file = 0; 
         }
     break; 
 }
 
 //------------------------------------Reading Force Values Consistently-------------------------------------
-  if (time_force_sensors>100)  
+  if (time_force_sensors>120)  
   {
   reading_bend = bending_sensor.get_force_value(slope_bend, offset_bend);
+  sigma_zd = (reading_bend*l1)/(2*Wb);
   reading_bend_ave = reading_bend_ave + reading_bend;
   //Serial.printf("Load cycles: %f \n  ",load_cycles);
   counter = counter +1;
-  if (counter > 10)
+
+  if (counter == 20)
   {
-reading_bend_ave = (reading_bend_ave/10);
-//Serial.printf("Average over 10: %f \n  ",reading_bend_ave);
-reading_bend_ave = 0; 
+     
+  complete = (reading_bend_ave/20);
+  Serial.printf("Average over 20: %f \n  ",complete); 
+  reading_bend_ave = 0;
 
 counter = 0; 
   }
+
   reading_ax = axial_sensor.get_force_value(slope_ax, offset_ax);
+  sigma_mittel = (reading_ax)/(A);
   
   
   time_force_sensors = 0; 
@@ -286,7 +359,10 @@ counter = 0;
 
 //------------------------------------Refresh Display -------------------------------------
 
- Display.draw_display(reading_bend, reading_ax,rpm_value,load_cycles,state_name,status);
+
+
+
+ Display.draw_display(reading_bend, reading_ax,load_cycles,state_name,status,Temp_Motor,Temp_Axial,sigma_zd,sigma_mittel);
   // Serial.printf("Load cycles: %d \n  ",rpm_value);
 }
 
