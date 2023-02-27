@@ -1,5 +1,6 @@
 #include "Speed_Sensor.h"
 
+//define variables
  volatile int count_value = 0;
     int rpms = 0;
     Tachometer tacho;
@@ -26,22 +27,22 @@
 
     elapsedMillis timer; 
  
-
+//Interrupt service routine 
 void pin_ISR() {
- 
-      RPM_Count++;
- 
+      RPM_Count++;  //count load cycle
 }
 
+//interrupt on rising edge
 void Speed_Sensor::attach_interrupt(byte DIN) {
   attachInterrupt(DIN, pin_ISR,RISING);
 }
 
+//reset load cycles
 void Speed_Sensor::reset_load_cycles() {
   RPM_Count = 0;
 }
 
-
+//not used
  unsigned long  Speed_Sensor::get_rpm_value()
 {
   rpm= (duration/1000)*60;
@@ -49,7 +50,7 @@ void Speed_Sensor::reset_load_cycles() {
 
     }
 
- 
+ //return load cycles
 int Speed_Sensor::get_load_cycles()
 {
   return RPM_Count;            

@@ -4,16 +4,17 @@
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC );
 
-double temp_bend =0;
-double temp_ax = 0;
-int temp_rpm_value = 0; 
-int temp_loadcycles = 0;
-int temp_indicator = 0;
-double temp_temp_mot = 0; 
-double temp_temp_ax = 0;  
-double temp_sigma_zd = 0; 
-double temp_sigma_mittel = 0;  
-String temp_status = 0; 
+//define variables
+double temp_bend =0;      //bending force
+double temp_ax = 0;       //axial force
+int temp_rpm_value = 0;   //rpm value
+int temp_loadcycles = 0;  //load cycles
+int temp_indicator = 0;   
+double temp_temp_mot = 0; //temperature left
+double temp_temp_ax = 0;  //temperature right
+double temp_sigma_zd = 0; //stress tension-press
+double temp_sigma_mittel = 0;   //mean stress
+String temp_status = 0;   //status
 String temp_state_name; 
 
 elapsedMillis time_display;
@@ -49,25 +50,23 @@ const int TEXT_SIZE_SMALL = 1;
   const int DIAL_LABEL_Y_OFFSET = 6;
   const int DIAL_LABEL_X_OFFSET = 4;
 
+
+// Write text on display - Position x and y
    const int POS_BIEGEKRAFT_X= 5;
    const int POS_BIEGEKRAFT_Y= 55;
-
-   
 
    const int POS_AXIALKRAFT_X= 5;
    const int POS_AXIALKRAFT_Y= 75;
 
-     const int POS_SIGMA_ZD_X= 5;
+   const int POS_SIGMA_ZD_X= 5;
    const int POS_SIGMA_ZD_Y = 95;
 
    const int POS_SIGMA_MITTEL_X= 5;
    const int POS_SIGMA_MITTEL_Y = 115;
 
-    const int POS_TEMP_MOT_X= 5;
+   const int POS_TEMP_MOT_X= 5;
    const int POS_TEMP_Y = 135;
-   //const int POS_TEMP2_Y = 135;
-
-
+ 
    const int POS_LASTZYKLEN_X = 5;
    const int POS_LASTZYKLEN_Y = 35;
 
@@ -154,139 +153,120 @@ void clearIndicatorHand(long rpm_value) {
 void Display_MCI::init_display()
 {
 tft.begin();
-tft.fillScreen(ILI9341_BLACK);
+tft.fillScreen(ILI9341_BLACK); //background
  tft.setRotation(3);
   tft.setTextSize(2);
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setCursor(POS_BIEGEKRAFT_X,POS_BIEGEKRAFT_Y);
+  tft.setTextColor(ILI9341_WHITE); //text color
+  tft.setCursor(POS_BIEGEKRAFT_X,POS_BIEGEKRAFT_Y); //write text
   tft.print("Biegekraft: ");
   
-  tft.setCursor(POS_AXIALKRAFT_X,POS_AXIALKRAFT_Y);
+  tft.setCursor(POS_AXIALKRAFT_X,POS_AXIALKRAFT_Y); //write text
   tft.print("Axialkraft: ");
 
-  tft.setCursor(POS_SIGMA_ZD_X,POS_SIGMA_ZD_Y);
- //tft.print(putchar(03c3));
-  //tft.print((char)11100110);
+  tft.setCursor(POS_SIGMA_ZD_X,POS_SIGMA_ZD_Y); //write text
   tft.print("Sigma_w: ");
 
-  tft.setCursor(POS_SIGMA_MITTEL_X,POS_SIGMA_MITTEL_Y);
+  tft.setCursor(POS_SIGMA_MITTEL_X,POS_SIGMA_MITTEL_Y); //write text
   tft.print("Sigma_mit: ");
-
-  //tft.setCursor(5, 45);
- // tft.print("Drehzahl: ");
   
-  tft.setCursor(POS_LASTZYKLEN_X, POS_LASTZYKLEN_Y);
+  tft.setCursor(POS_LASTZYKLEN_X, POS_LASTZYKLEN_Y); //write text
   tft.print("Lastzyklen: ");
 
-   tft.setCursor(POS_TEMP_MOT_X, POS_TEMP_Y);
+   tft.setCursor(POS_TEMP_MOT_X, POS_TEMP_Y); //write text
   tft.print("Temperatur: ");
 
-  tft.setCursor(POS_STATE_X, POS_STATE_Y);
+  tft.setCursor(POS_STATE_X, POS_STATE_Y); //write text
   tft.print("State: ");
   
-  tft.setTextSize(1);
-  tft.setCursor(POS_STATUS_X, POS_STATUS_Y);
+  tft.setTextSize(1); //text size small
+  tft.setCursor(POS_STATUS_X, POS_STATUS_Y); //write text
   tft.print("Status: ");
-  /*
-  tft.drawCircle(DIAL_CENTER_X, DIAL_CENTER_Y, DIAL_RADIUS, ILI9341_WHITE);
-  drawTickMarks();
-  drawMajorTickLabels();
 
-  tft.setTextColor(ILI9341_ORANGE);
-  tft.setTextSize(1);
-  tft.setCursor(110, 210);
-  tft.print(" x1000");
-*/
- 
+  //Create button
   tft.fillRect(160,200,200,200, ILI9341_GREEN);
- // tft.fillRect(0,200,95 ,100, ILI9341_RED);
-
   tft.setTextColor(ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setCursor(169, 214);
-  tft.print("SAVE & RESET");
-  //tft.setCursor(20, 214);
-  //tft.print("STOPP");
-  
+  tft.print("SAVE & RESET"); 
   
 }
 
+//function for write data to display
 void Display_MCI::draw_display(double reading_bend, double reading_ax, int loadcycles,String state_name, String status,double Temp_Motor,double Temp_Axial,double sigma_zd, double sigma_mittel)
  
 {
 
  
-
-if (time_display > 1000)
+//write data in black and white to be able to update the values
+if (time_display > 1000) //Reload display every second
   {
-     tft.setTextSize(2);
+  tft.setTextSize(2);
    tft.setTextColor(ILI9341_BLACK);
-   tft.setCursor(POS_UPDATE_VALUES_X, POS_BIEGEKRAFT_Y);
-   tft.printf("%3.2f N",temp_bend);
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_BIEGEKRAFT_Y); 
+   tft.printf("%3.2f N",temp_bend); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
-   tft.printf("%3.2f N",temp_ax);
+   tft.printf("%3.2f N",temp_ax); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_ZD_Y);
-   tft.printf("%3.2f MPa",temp_sigma_zd);
+   tft.printf("%3.2f MPa",temp_sigma_zd); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
-   tft.printf("%3.2f MPa",temp_sigma_mittel);
+   tft.printf("%3.2f MPa",temp_sigma_mittel); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, 45);
-   tft.printf("%d rpm", temp_rpm_value);
+   tft.printf("%d rpm", temp_rpm_value); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_LASTZYKLEN_Y);
-   tft.print(temp_loadcycles);
+   tft.print(temp_loadcycles); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_STATE_Y);
-   tft.print(temp_state_name);
+   tft.print(temp_state_name); //write data to display
 
    tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y);
-   tft.printf("%3.2f ",temp_temp_mot);
-   tft.print((char)247);
+   tft.printf("%3.2f ",temp_temp_mot); //write data to display
+   tft.print((char)247); //degree symbol
    tft.print("C (li.)");
 
-  
-
    tft.setCursor(POS_UPDATE_VALUES_X, POS_TEMP_Y+20);
-   tft.printf("%3.2f ",temp_temp_ax);
-   tft.print((char)247);
+   tft.printf("%3.2f ",temp_temp_ax);//write data to display
+   tft.print((char)247);//degree symbol
    tft.print("C (re.)");
 
     tft.setTextSize(1);
     tft.setCursor(50, POS_STATUS_Y);
-    tft.print(temp_status);
+    tft.print(temp_status); //write data to display
     tft.setTextSize(2);
 
    tft.setTextColor(ILI9341_WHITE);
    tft.setCursor(POS_UPDATE_VALUES_X, POS_BIEGEKRAFT_Y);
-   tft.printf("%3.2f N",reading_bend);
+   tft.printf("%3.2f N",reading_bend); //write data to display
   
+  //axial froce sensor < 150 N inaccurate, therefore do not output data
   if (reading_ax <= 150)
   {
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
    tft.printf("-.-- N");
+   tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
+   tft.printf("-.-- MPa");
   }
 else 
 {
   tft.setTextColor(ILI9341_BLACK);
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
    tft.printf("-.-- N");
+    tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
+      tft.printf("-.-- MPa");
   tft.setTextColor(ILI9341_WHITE);
    tft.setCursor(POS_UPDATE_VALUES_X, POS_AXIALKRAFT_Y);
    tft.printf("%3.2f N",reading_ax);
+      tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
+      tft.printf("%3.2f MPa",sigma_mittel);
 }
 
- 
-
 tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_ZD_Y);
-   tft.printf("%3.2f MPa",sigma_zd);
-
-   tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_MITTEL_Y);
-   tft.printf("%3.2f MPa",sigma_mittel);
-  // tft.setCursor(POS_UPDATE_VALUES_X, 45);
-   //tft.printf("%d rpm",rpm_value);
+  tft.printf("%3.2f MPa",sigma_zd);
+  
 
   tft.setCursor(POS_UPDATE_VALUES_X, POS_LASTZYKLEN_Y);
    tft.print(loadcycles);
@@ -305,6 +285,7 @@ tft.setCursor(POS_UPDATE_VALUES_X, POS_SIGMA_ZD_Y);
     tft.print(state_name);
   tft.setTextSize(1);
 
+//Text in status line
 if (status=="Card failed"){
   tft.setTextColor(ILI9341_RED);
 }
@@ -316,11 +297,11 @@ else
     tft.print(status);
     tft.setTextSize(2);
 
+//allocate the variable
    temp_bend =reading_bend;
    temp_ax = reading_ax;
    temp_sigma_zd = sigma_zd; 
    temp_sigma_mittel = sigma_mittel; 
-  // temp_rpm_value = rpm_value;
    temp_loadcycles = loadcycles; 
    time_display = 0;
    temp_state_name = state_name;
@@ -334,7 +315,7 @@ else
 
 
  
-     
+     //not used
 void Display_MCI::draw_tacho(int rpm)
 {
   if (time_display_tacho > 1000)

@@ -23,7 +23,6 @@ public:
 
     int get_load_cycles();
 
-    //void pin_ISR();
 
 };
 
