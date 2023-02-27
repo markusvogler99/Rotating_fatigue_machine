@@ -173,15 +173,7 @@ void setup() {
 
 
 void loop(void) {
-
-//uint16_t Temp_Axial = Thermo_Axial.readRTD();
-//Temp_Motor = Thermo_Motor.readRTD();
-
-//float ratio = Temp_Motor;
- // ratio /= 32768;
-  //Serial.print("Ratio = "); Serial.println(ratio,8);
   
- 
 
  if (time_temp>5000)  
   {
@@ -190,6 +182,8 @@ void loop(void) {
  time_temp = 0; 
   }
 
+
+//Reinitialize Display and setting all outputs to low  (Helps with the reset)
   if (reset_display > 20000)
   {
     digitalWrite(9,LOW);
@@ -203,23 +197,16 @@ void loop(void) {
   }
 
 
-//Serial.printf("%f \n",Temp_Axial);
-//Serial.printf("%f \n",Temp_Motor); 
-
 
 //----------------------------------------------------------STATE MACHINE---------------
 switch (state)
 {
     case 0:
-       // count_write_load_cycles();
         state_name = "0 - IDLE";
-        //Serial.println("hallo");
-       // speed_sensor.reset_load_cycles();
-        //load_cycles = 0; 
+        
       
         if (SD.begin(chipSelect))
         {
-            //Serial.println("Card initialized.");
             status = "Card initialized";
         }
         else
@@ -227,7 +214,6 @@ switch (state)
           status = "Card failed";
         }
 
-        //flag_load_cycles = 1; 
                
 //Create File Name
 
@@ -310,7 +296,6 @@ switch (state)
   reading_bend = bending_sensor.get_force_value(slope_bend, offset_bend);
   sigma_zd = (reading_bend*l1)/(2*Wb);
   reading_bend_ave = reading_bend_ave + reading_bend;
-  //Serial.printf("Load cycles: %f \n  ",load_cycles);
   counter = counter +1;
 
   if (counter == 20)
